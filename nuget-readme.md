@@ -6,7 +6,11 @@
 [![Live demo](https://img.shields.io/badge/demo-live-success)](https://alpaq92.github.io/Fluid.Avalonia/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Alpaq92/Fluid.Avalonia/blob/main/LICENSE)
 
-A **Fluent 2 / WinUI 3-inspired theme for [Avalonia](https://github.com/AvaloniaUI/Avalonia)** with its own identity, adapting to your system accent color. Built on Avalonia's `FluentTheme` with ported Fluent 2 design tokens — lit-edge elevation, card surfaces, a Fluent-tuned set of control themes (including Avalonia 12.1's new read-only `TableView`, matched to the `ListBox` and `DataGrid`), and a ready-made `FluidWindow` with a custom title bar and a cross-platform translucent backdrop (`TransparencyEnabled` — Mica on Windows, vibrancy on macOS, a KWin blur on KDE; opaque on other Linux desktops — seeded from the Windows "Transparency effects" setting).
+A **Fluent 2 / WinUI 3-inspired theme for [Avalonia](https://github.com/AvaloniaUI/Avalonia)** with its own identity, adapting to your system accent color.
+
+It layers ported design tokens over Avalonia's `FluentTheme`: lit-edge elevation, card surfaces, and control themes tuned across the set — Avalonia 12.1's read-only `TableView` included, matched to the `ListBox` and `DataGrid`.
+
+It also ships a ready-made **`FluidWindow`** with a custom title bar and a translucent backdrop. `TransparencyEnabled` gives you Mica on Windows, vibrancy on macOS and a KWin blur on KDE, falling back to opaque on other Linux desktops. On Windows it follows the OS "Transparency effects" setting.
 
 ![Fluid.Avalonia demo — the Accents page split diagonally between the light and dark themes](https://raw.githubusercontent.com/Alpaq92/Fluid.Avalonia/main/screenshot.png)
 

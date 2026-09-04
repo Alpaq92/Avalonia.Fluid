@@ -9,7 +9,9 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
 </p>
 
-A **Fluent 2-inspired** Avalonia theme with its own identity, adapting to your system accent color — read from Windows, with macOS and Linux fallbacks. Built on [Avalonia](https://avaloniaui.net/) **12** (.NET 8) and its `FluentTheme` with ported Fluent 2 design tokens, it brings authentic WinUI tokens and metrics — plus the translucent **WinUI backdrop** — Mica on Windows 11, a vibrancy blend on macOS, a KWin blur on KDE — and a cross-platform, software-rendered **acrylic** backdrop (via the companion **[Fluid.Avalonia.Acrylic](https://www.nuget.org/packages/Fluid.Avalonia.Acrylic)** package) that works anywhere, even where the OS has none.
+A **Fluent 2-inspired** theme for [Avalonia](https://avaloniaui.net/) **12** (.NET 8) with its own identity. It layers authentic WinUI tokens and metrics over Avalonia's `FluentTheme`, and picks up the system accent color natively on Windows, macOS and Linux.
+
+Your app's windows get a translucent backdrop too: the native one where it exists — Mica on Windows 11, a vibrancy blend on macOS, a KWin blur on KDE — or a software-rendered **acrylic** alternative, from the companion **[Fluid.Avalonia.Acrylic](https://www.nuget.org/packages/Fluid.Avalonia.Acrylic)** package, anywhere it doesn't.
 
 ![Fluid.Avalonia — the demo's Accents page, split diagonally between the light and dark themes](https://raw.githubusercontent.com/Alpaq92/Fluid.Avalonia/main/screenshot.png)
 
@@ -66,15 +68,19 @@ The repository also contains **Fluid.Avalonia.Demo**, a demo app that mirrors th
 
 ## How the demo is built
 
-The solution is split into a shared library plus per-platform heads:
+One shared library holds the whole gallery. Two thin heads launch it:
 
 | Project | Role |
 | --- | --- |
-| `Fluid.Avalonia.Demo` | Shared gallery library (App, Views, Controls, pages, assets). |
-| `Fluid.Avalonia.Demo.Desktop` | Desktop head — the Mica window + custom title bar. |
-| `Fluid.Avalonia.Demo.Browser` | WebAssembly head — hosts the shared `MainView` as the single top-level. |
+| `Fluid.Avalonia.Demo` | The gallery itself — App, Views, Controls, pages, assets. |
+| `Fluid.Avalonia.Demo.Desktop` | Desktop entry point. Adds the Mica window and custom title bar. |
+| `Fluid.Avalonia.Demo.Browser` | WebAssembly entry point. Hosts the gallery as the single top-level. |
 
-The desktop window's content was factored into a shared `MainView` so both heads reuse the exact same shell; Windows-only bits (Mica, the `WM_SETICON` taskbar fix, the registry accent read) are guarded and simply don't run in the browser. `.github/workflows/pages.yml` publishes the Browser head and deploys it on every push to `main` — just set **Settings → Pages → Source = "GitHub Actions"** once. Build it locally with:
+Both heads show the same shell, because the window's contents live in a shared `MainView`. The Windows-only pieces — Mica, the `WM_SETICON` taskbar fix, the registry accent read — are guarded, so they simply don't run in the browser.
+
+Every push to `main` publishes the Browser head to GitHub Pages via `.github/workflows/pages.yml`. That needs one bit of setup, once: **Settings → Pages → Source = "GitHub Actions"**.
+
+To build the browser head yourself:
 
 ```
 dotnet workload install wasm-tools
@@ -85,45 +91,73 @@ dotnet publish Fluid.Avalonia.Demo.Browser -c Release
 
 ## What it is?
 
-- **A WinUI 3 look for Avalonia.** Fluent 2 color tokens, a WinUI type ramp (rendered in the bundled, cross-platform **DejaVu Sans** font), 4 px / 8 px corner radii, the "lit-edge" control border, drop-shadow elevation, and a translucent window backdrop (Mica on Windows, vibrancy on macOS, a KWin blur on KDE — solid elsewhere on Linux — toggleable, and following the OS transparency setting on Windows). Symbol glyphs come from the bundled **Codicons** icon font, so both text and icons render identically on desktop and in the browser.
-- **Live accent integration, on every OS.** The accent is read from the host where possible — the full seven-shade **Windows** `AccentPalette`, the **macOS** `AppleAccentColor`, and the **Linux** GNOME (`accent-color`) / KDE (`kdeglobals`) / Cinnamon (Mint theme name) accent — and flows into every accented control, updating instantly when the user changes it. Where no OS accent is available, apps can pick from the **Open Color preset palette** (20 swatches) or set any color manually (e.g. with a `ColorPicker`) via `AccentService.SetAccent` / `UseSystemAccent`.
-- **Themed for the whole Avalonia control set**, including the newest ones: Avalonia 12.1's core **`TableView`** — a read-only table of XAML-defined, resizable columns — is themed in the library to read exactly like our `ListBox` and `DataGrid`, down to a shared header-hover fill. See it beside the DataGrid on the demo's **Collections** page.
-- **Cross-platform & self-contained.** One library (`Fluid.Avalonia`) targeting `net8.0` with no third-party theme dependencies — it layers on Avalonia's built-in `FluentTheme`. Platform specifics (registry / `defaults` / `gsettings` accent readers, Mica, dark title bar) are guarded and degrade gracefully everywhere.
+- **A WinUI 3 look.** Fluent 2 color tokens, the WinUI type ramp, 4 px / 8 px corner radii, the "lit-edge" control border and drop-shadow elevation. Text and icons come from bundled fonts — **DejaVu Sans** and **Codicons** — so they render identically on desktop and in the browser.
+- **A live accent, on every OS.** Read natively from the host: the seven-shade Windows `AccentPalette`, the macOS `AppleAccentColor`, and the GNOME, KDE or Cinnamon accent on Linux. It reaches every accented control and updates the moment the user changes it. Apps can override it instead — 20 **Open Color** presets, or any color at all through `AccentService`.
+- **Themed for the whole control set,** newest included. Avalonia 12.1's `TableView` reads exactly like our `ListBox` and `DataGrid`, down to a shared header-hover fill. The demo's **Collections** page puts it beside the DataGrid.
+- **Self-contained.** One `net8.0` library, no third-party theme dependencies, layered on Avalonia's own `FluentTheme`. The platform-specific pieces — accent readers, Mica, the dark title bar — are guarded, so they degrade gracefully wherever they don't apply.
 
 ## Why?
 
-This started as a quest to align Avalonia with WinUI 3 — and what began as migrating the visual tokens soon grew into something more, as enhancements and new controls were added along the way. It draws on [Romzetron.Avalonia](https://github.com/Romzetron/Romzetron.Avalonia) as a reference for solution structure and the semantic-brush styling architecture, with three deliberate differences from it:
+It began as a quest to align Avalonia with WinUI 3, and grew past the visual tokens as controls were added along the way. [Romzetron.Avalonia](https://github.com/Romzetron/Romzetron.Avalonia) was the reference for solution structure and semantic-brush styling, with three deliberate departures:
 
-1. **No baked-in accent** — adapt to whatever accent the user has set in their OS (Windows, macOS or Linux). An Open Color preset palette and manual `ColorPicker` selection are offered as *options*, not as a hard-coded default.
-2. **Avalonia 12 / .NET 8.**
-3. **As close to WinUI 3 as possible** — no per-control "set the color explicitly" override mechanism; theming is purely token-driven, the way Fluent 2 works.
+1. **No baked-in accent.** Adapt to whatever the user set in their OS. Presets and manual selection are options, never the default.
+2. **Avalonia 12 and .NET 8.**
+3. **Token-driven theming only.** No per-control color overrides, the way Fluent 2 actually works.
 
-Rather than hand-porting ~70 control templates (and fighting Avalonia 12 template changes), the theme layers on Avalonia's `FluentTheme` and overrides the token/resource layer. This keeps it small, robust on Avalonia 12, and faithful to Fluent 2.
+Hand-porting some 70 control templates would mean re-fighting every Avalonia template change. Layering on `FluentTheme` and overriding only the token layer keeps the theme small, faithful, and cheap to carry forward.
 
 ## Custom controls
 
-The demo isn't only re-themed stock controls. A number of **composite controls and shell features were built specifically for this project**, with no direct equivalent in vanilla Avalonia — the `RadialTimePicker` and its reusable `RadialClock` dial, the segmented `DateTimePicker` / `DateTimeSpinners` and `AnalogDateTimePicker`, `RadialSlider`, `ProgressCircle`, `BinarySelector`, `FluidColorPicker`, `BreadcrumbBar`, `GroupBox`, `InfoBar`, `VisualRate`, a Fluent-themed `ContentDialog`, the reusable `FluidWindow` shell, and more.
+The demo isn't only re-themed stock controls. These were built for this project, and have no direct equivalent in vanilla Avalonia:
 
-Each one is catalogued — with what it is and a live example — in **[CUSTOM.md](CUSTOM.md)**, a detailed reference for every custom control and feature authored for Fluid.Avalonia (also rendered live on the demo's **Custom** page).
+**Time and date**
+
+- **`RadialTimePicker`** — two concentric rings, hour inside and minute outside, each a Fluent slider bent into a circle. Switches to the Material 24-hour layout via `Is24Hour`.
+- **`RadialClock`** — the dial above, on its own. Drop it straight onto a page for an inline picker.
+- **`DateTimePicker`** — a segmented date and time field opening a flyout of looping spinner columns. `DateTimeSpinners` is those columns, reusable on their own.
+- **`AnalogDateTimePicker`** — the same field, but its dropdown pairs a `Calendar` with the radial dial instead of spinner wheels.
+
+**Input and selection**
+
+- **`BinarySelector`** — a two-value segmented switch where an accent pill slides between the options. Returns your object, not a bool, so `LeftValue="AM" RightValue="PM"` just works.
+- **`RadialSlider`** — a circular slider on the same ring geometry as the clock dial.
+- **`VisualRate`** — a row of clickable glyphs for a 0..N rating. Click the topmost lit one again to clear it.
+- **`SignaturePad`** — freehand signing with a velocity-driven variable-width pen, so ink reads calligraphic rather than flat. Ported from android-signaturepad.
+- **`FluidColorPicker`** — a swatch and hex button opening tabbed color editors. Its body, `FluidColorEditor`, can be hosted in any flyout of your own.
+- **`LabeledTextInput`** — a caption paired with a text field, matched to the Fluent `ColorView` inputs.
+
+**Layout and status**
+
+- **`BreadcrumbBar`** — a chevron-joined trail that collapses WinUI-style behind a `…` chip when it runs out of room. Give it a `ChildrenSelector` and every chevron becomes a directory dropdown.
+- **`InfoBar`** — a severity banner: icon, title, message, optional action, dismiss button.
+- **`GroupBox`** — a titled card, the classic WPF control Avalonia lacks.
+- **`ProgressCircle`** — a determinate radial progress ring.
+- **`BusyArea`** — wrap any content and toggle `IsBusy` to dim it behind a scrim and a progress indicator.
+- **`ContentDialog`** — a modal over a dimmed surface, DialogHost.Avalonia re-themed to Fluent 2. An in-window overlay, so it works in the browser too.
+
+Plus the shell itself: the reusable **`FluidWindow`**, a system tray menu, and the thin Fluent scrollbar.
+
+**[CUSTOM.md](CUSTOM.md)** describes each one in full, and the demo's **Custom** page renders that same document live.
 
 ## Building & running
 
-Requires the **.NET 10 SDK** (pinned via `global.json`; the library and desktop demo still target `net8.0` — the SDK 10 requirement comes from the `net10.0-browser` WASM head).
+Needs the **.NET 10 SDK**, pinned in `global.json`. The library and desktop demo still target `net8.0`; only the WebAssembly head needs SDK 10.
 
 ```
 dotnet build
 dotnet run --project Fluid.Avalonia.Demo.Desktop
 ```
 
-Avalonia 12.1's **hot reload** (live `.axaml` / `.cs` edits in the running app) is wired into the Desktop head but **off by default**, because it is a commercial package that fails the build without a licence key. Opt in per run — see [OVERVIEW.md](OVERVIEW.md#hot-reload-opt-in):
+**Hot reload** is wired into the Desktop head but off by default, because the package is commercial and fails the build without a licence key. Opt in per run — details in [OVERVIEW.md](OVERVIEW.md#hot-reload-opt-in):
 
 ```
 dotnet watch run -p:FluidAvaloniaHotReload=true -p:AvaloniaUILicenseKey=<key>
 ```
 
-The accent is read natively on Windows, macOS and Linux (GNOME / KDE / Cinnamon), falling back to Avalonia's platform accent elsewhere — and can always be overridden with a preset or a picked color.
+Two behaviours worth knowing when you run it:
 
-The translucent window backdrop is cross-platform via `FluidWindow.TransparencyEnabled` (and the shared `TransparencyService`): Mica on Windows, vibrancy on macOS, and blur on Linux where the compositor supports it (real blur on KDE / KWin; it degrades to a solid window elsewhere). On Windows it's seeded from the OS **"Transparency effects"** setting at startup; the demo's **Settings → Window** page adds an on/off switch to override it (disabled in the browser head, which has no window backdrop). The dark title-bar frame remains Windows-only.
+- **The accent** comes from the OS on Windows, macOS and Linux, and falls back to Avalonia's platform accent elsewhere. A preset or a picked color overrides it at any time.
+- **The backdrop** follows `FluidWindow.TransparencyEnabled`: Mica on Windows, vibrancy on macOS, and a real blur on KDE. Elsewhere the window turns solid. Windows seeds it from the OS "Transparency effects" setting; **Settings → Window** in the demo overrides that. The dark title-bar frame stays Windows-only.
 
 ## Inspirations
 
@@ -150,4 +184,8 @@ The full list of third-party projects this solution bundles, depends on, or refe
 
 ## License
 
-[MIT](LICENSE). The Fluent 2 design-token *values* and WinUI resource *structures* are ported from the MIT-licensed [microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml) and [WinUI 3 Gallery](https://github.com/microsoft/WinUI-Gallery) projects (© Microsoft Corporation); the built-in accent preset palette comes from the MIT-licensed [Open Color](https://yeun.github.io/open-color/). See **[CREDITS.md](CREDITS.md)** for the full attribution list.
+[MIT](LICENSE).
+
+The Fluent 2 design-token *values* and WinUI resource *structures* are ported from the MIT-licensed [microsoft-ui-xaml](https://github.com/microsoft/microsoft-ui-xaml) and [WinUI 3 Gallery](https://github.com/microsoft/WinUI-Gallery) projects, © Microsoft Corporation. The built-in accent presets come from the MIT-licensed [Open Color](https://yeun.github.io/open-color/).
+
+**[CREDITS.md](CREDITS.md)** has the full attribution list.
