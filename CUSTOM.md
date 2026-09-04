@@ -68,7 +68,7 @@ A freehand signature pad with a natural, velocity-driven variable-width pen — 
 
 ### Fluid.Avalonia theme
 
-A WinUI 3 / Fluent 2 look layered over `FluentTheme`: light/dark Fluent 2 colour tokens, lit-edge elevation borders, card surfaces, and a Fluent-tuned set of control themes (`NumericUpDown` / `ButtonSpinner`, `DataGrid`, `Calendar`, and more). The theme is **font-agnostic** — the host app supplies the typeface; the demo bundles **DejaVu Sans** for text (broad coverage: Latin plus `→ ● ▼ │`) and the **Codicons** font (VS Code, CC-BY-4.0) for symbol glyphs, so type and icons render identically on desktop and in the browser — no reliance on the Windows-only Segoe fonts.
+A WinUI 3 / Fluent 2 look layered over `FluentTheme`: light/dark Fluent 2 colour tokens, lit-edge elevation borders, card surfaces, and a Fluent-tuned set of control themes (`NumericUpDown` / `ButtonSpinner`, `DataGrid`, `TableView`, `Calendar`, and more). The theme is **font-agnostic** — the host app supplies the typeface; the demo bundles **DejaVu Sans** for text (broad coverage: Latin plus `→ ● ▼ │`) and the **Codicons** font (VS Code, CC-BY-4.0) for symbol glyphs, so type and icons render identically on desktop and in the browser — no reliance on the Windows-only Segoe fonts.
 
 ### OS accent integration
 

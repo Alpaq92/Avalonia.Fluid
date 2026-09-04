@@ -21,6 +21,28 @@
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
   </ItemGroup>
 
+  <!-- Avalonia hot reload — live .axaml / .cs edits in the running app (Avalonia 12.1's GA feature).
+       It is COMMERCIAL: the package requires a licence key (Avalonia Plus / Pro / Enterprise, or the
+       30-day community trial), and without one the BUILD fails with AvaloniaUI.Licensing AVLIC0001.
+       So it is strictly opt-in and Debug-only — a plain build, and CI, never reference it:
+
+           dotnet watch run -p:FluidAvaloniaHotReload=true -p:AvaloniaUILicenseKey=<key>
+
+       The key may equally come from an environment variable or a CI secret; never commit one. No
+       startup code is needed: the package's source generator wires itself up, and its targets pull
+       the .axaml of referenced projects (the shared Fluid.Avalonia.Demo library, and the theme) into
+       its registry, so edits anywhere in the solution apply. Add
+       AvaloniaHotReloadEnableFileWatcher=true to also pick up .axaml edits when running outside
+       `dotnet watch`.
+
+       This does NOT replace the demo's Playground page: that is a runtime XAML sandbox for the app's
+       own users (Avalonia.Markup.Xaml.Loader, and it ships in the WASM demo), whereas hot reload is a
+       developer-time tool driven by `dotnet watch` or an IDE. -->
+  <ItemGroup Condition="'$(FluidAvaloniaHotReload)' == 'true' And '$(Configuration)' == 'Debug'">
+    <PackageReference Include="AvaloniaUI.DiagnosticsSupport.HotReload" Version="1.0.0" />
+    <AvaloniaUILicenseKey Include="$(AvaloniaUILicenseKey)" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Flow the NativeAOT flag into the shared Demo project ONLY when this head is actually
          published AOT (Release + RuntimeIdentifier). In a plain solution build the flag is unset,
