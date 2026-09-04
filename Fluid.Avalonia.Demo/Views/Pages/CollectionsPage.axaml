@@ -23,6 +23,23 @@
             </Border>
         </ctrls:ControlExample>
 
+        <ctrls:ControlExample Header="A TableView (Avalonia 12.1) shows read-only tabular data with XAML-defined, resizable columns — a lighter alternative to the DataGrid, themed by Fluid.Avalonia to match the ListBox."
+                              XamlSource="&lt;TableView ItemsSource=&quot;{x:Static models:SampleAddresses.All}&quot; x:DataType=&quot;models:SampleAddresses+Address&quot;&gt;&#10;  &lt;TableView.Columns&gt;&#10;    &lt;TableViewColumn Header=&quot;Id&quot; Binding=&quot;{Binding Id}&quot; Width=&quot;64&quot; HorizontalContentAlignment=&quot;Right&quot; /&gt;&#10;    &lt;TableViewColumn Header=&quot;Street&quot; Binding=&quot;{Binding Street}&quot; Width=&quot;2*&quot; /&gt;&#10;    &lt;TableViewColumn Header=&quot;City&quot; Binding=&quot;{Binding City}&quot; Width=&quot;1.4*&quot; /&gt;&#10;    &lt;TableViewColumn Header=&quot;State&quot; Binding=&quot;{Binding State}&quot; Width=&quot;72&quot; /&gt;&#10;    &lt;TableViewColumn Header=&quot;Zip&quot; Binding=&quot;{Binding Zip}&quot; Width=&quot;110&quot; /&gt;&#10;  &lt;/TableView.Columns&gt;&#10;&lt;/TableView&gt;">
+            <!-- Columns are declared in XAML (a binding or a full CellTemplate each, pixel or star widths,
+                 per-column alignment); rows and cells recycle like the ListBox it derives from. -->
+            <TableView Width="560" Height="220" SelectedIndex="1"
+                       ItemsSource="{x:Static models:SampleAddresses.All}"
+                       x:DataType="models:SampleAddresses+Address">
+                <TableView.Columns>
+                    <TableViewColumn Header="Id" Binding="{Binding Id}" Width="64" HorizontalContentAlignment="Right" />
+                    <TableViewColumn Header="Street" Binding="{Binding Street}" Width="2*" />
+                    <TableViewColumn Header="City" Binding="{Binding City}" Width="1.4*" />
+                    <TableViewColumn Header="State" Binding="{Binding State}" Width="72" />
+                    <TableViewColumn Header="Zip" Binding="{Binding Zip}" Width="110" />
+                </TableView.Columns>
+            </TableView>
+        </ctrls:ControlExample>
+
         <ctrls:ControlExample Header="A ListBox of selectable items (the 50 US states)."
                               XamlSource="&lt;ListBox ItemsSource=&quot;{x:Static models:UsStates.All}&quot; /&gt;">
             <ListBox Width="280" Height="180" SelectedIndex="4"

@@ -1,0 +1,277 @@
+<!--
+    TableView — Avalonia 12.1's read-only tabular control (a ListBox with XAML-defined, resizable
+    columns), aligned with our ListBox / DataGrid look:
+      • the same bordered, rounded, opaque surface (rows and the selection composite like the ListBox),
+      • a quiet header strip on the Expander-header fill with secondary-colour semibold captions, and
+        column dividers that only appear while the pointer is over a resizable header,
+      • comfortable 40 px rows with the ListBox's 16 px inset and edge-to-edge hover / selection fills,
+      • the ListBoxItem's translucent base-accent selection, keeping the primary text colour.
+    The row brushes reuse FluentTheme's own TableViewRow* resource keys, so the stock TableViewRow
+    template is recoloured through our Fluent 2 tokens; the TableView, its header-hosting ScrollViewer
+    and the TableViewColumnHeader are re-authored here. TableViewCell keeps ContentControl's built-in
+    presenter template and only takes its padding / alignment from the keys below.
+-->
+<ResourceDictionary
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ===== Metrics ===== -->
+    <!-- FluentTheme pads every row (and the header strip) 6,9,6,12. We keep rows flush so the hover /
+         selection fill runs edge to edge like the ListBox, and size them with MinHeight instead. -->
+    <Thickness x:Key="TableViewRowPadding">0</Thickness>
+    <Thickness x:Key="TableViewCellPadding">16,0</Thickness>
+    <x:Double x:Key="TableViewRowMinHeight">40</x:Double>
+    <x:Double x:Key="TableViewColumnHeaderMinHeight">40</x:Double>
+    <x:Double x:Key="TableViewColumnHeaderFontSize">13</x:Double>
+    <x:Double x:Key="TableViewColumnResizerWidth">12</x:Double>
+    <!-- Rows are unpadded, so the resizer only needs to straddle the column edge: half its width past
+         the header's right edge puts its 1 px line exactly on the boundary. -->
+    <Thickness x:Key="TableViewColumnResizerMargin">0,0,-6,0</Thickness>
+
+    <!-- ===== Brushes (theme-aware via Color tokens) ===== -->
+    <SolidColorBrush x:Key="TableViewRowBackground" Color="Transparent" />
+    <SolidColorBrush x:Key="TableViewRowBackgroundDisabled" Color="Transparent" />
+    <SolidColorBrush x:Key="TableViewRowBackgroundPointerOver" Color="{DynamicResource SubtleFillColorSecondary}" />
+    <SolidColorBrush x:Key="TableViewRowBackgroundPressed" Color="{DynamicResource SubtleFillColorTertiary}" />
+    <!-- Exactly the Fluent ListBoxItem selection: the base SystemAccentColor at 0.6 / 0.7 / 0.8, so the
+         translucent accent over the opaque surface reads as the same muted accent as the ListBox and
+         the demo's DataGrid refinements. -->
+    <SolidColorBrush x:Key="TableViewRowBackgroundSelected" Color="{DynamicResource SystemAccentColor}" Opacity="0.6" />
+    <SolidColorBrush x:Key="TableViewRowBackgroundSelectedPointerOver" Color="{DynamicResource SystemAccentColor}" Opacity="0.7" />
+    <SolidColorBrush x:Key="TableViewRowBackgroundSelectedPressed" Color="{DynamicResource SystemAccentColor}" Opacity="0.8" />
+    <!-- Keep the primary text colour on the translucent selection (like the ListBox) rather than
+         always-white on-accent text. -->
+    <SolidColorBrush x:Key="TableViewRowForegroundPointerOver" Color="{DynamicResource TextFillColorPrimary}" />
+    <SolidColorBrush x:Key="TableViewRowForegroundPressed" Color="{DynamicResource TextFillColorPrimary}" />
+    <SolidColorBrush x:Key="TableViewRowForegroundSelected" Color="{DynamicResource TextFillColorPrimary}" />
+    <SolidColorBrush x:Key="TableViewRowForegroundSelectedPointerOver" Color="{DynamicResource TextFillColorPrimary}" />
+    <SolidColorBrush x:Key="TableViewRowForegroundSelectedPressed" Color="{DynamicResource TextFillColorPrimary}" />
+    <SolidColorBrush x:Key="TableViewRowForegroundDisabled" Color="{DynamicResource TextFillColorDisabled}" />
+    <!-- Header captions + the hover-revealed column divider / resize handle. -->
+    <SolidColorBrush x:Key="TableViewColumnHeaderForeground" Color="{DynamicResource TextFillColorSecondary}" />
+    <SolidColorBrush x:Key="TableViewColumnHeaderSeparatorBackground" Color="{DynamicResource ControlStrongStrokeColorDefault}" />
+
+    <!-- ===== The TableView's ScrollViewer: the header strip docked above the scrolling rows ===== -->
+    <ControlTheme x:Key="FluidTableViewScrollViewer" TargetType="ScrollViewer">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
+                    <DockPanel Name="ContentPanel">
+                        <!-- Header strip: the same fill the Expander header / GroupBox header use. -->
+                        <Border Name="HeaderStrip"
+                                DockPanel.Dock="Top"
+                                Background="{DynamicResource ExpanderHeaderBackground}"
+                                Padding="{DynamicResource TableViewRowPadding}">
+                            <TableViewColumnHeadersPresenter />
+                        </Border>
+                        <ScrollContentPresenter Name="PART_ContentPresenter"
+                                                Background="{TemplateBinding Background}"
+                                                HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
+                                                VerticalSnapPointsType="{TemplateBinding VerticalSnapPointsType}"
+                                                HorizontalSnapPointsAlignment="{TemplateBinding HorizontalSnapPointsAlignment}"
+                                                VerticalSnapPointsAlignment="{TemplateBinding VerticalSnapPointsAlignment}"
+                                                Padding="{TemplateBinding Padding}"
+                                                ScrollViewer.IsScrollInertiaEnabled="{TemplateBinding IsScrollInertiaEnabled}">
+                            <ScrollContentPresenter.GestureRecognizers>
+                                <ScrollGestureRecognizer CanHorizontallyScroll="{Binding CanHorizontallyScroll, ElementName=PART_ContentPresenter}"
+                                                         CanVerticallyScroll="{Binding CanVerticallyScroll, ElementName=PART_ContentPresenter}"
+                                                         IsScrollInertiaEnabled="{Binding (ScrollViewer.IsScrollInertiaEnabled), ElementName=PART_ContentPresenter}" />
+                            </ScrollContentPresenter.GestureRecognizers>
+                        </ScrollContentPresenter>
+                    </DockPanel>
+                    <!-- Our thin overlay scrollbars, inset so they clear the rounded corners (rows and
+                         the selection stay full-width) — the same insets as the demo's DataGrid. -->
+                    <ScrollBar Name="PART_HorizontalScrollBar"
+                               Orientation="Horizontal"
+                               Grid.Column="0" Grid.Row="1"
+                               Margin="4,0,3,3" />
+                    <ScrollBar Name="PART_VerticalScrollBar"
+                               Orientation="Vertical"
+                               Grid.Column="1" Grid.Row="0"
+                               Margin="0,4,3,4" />
+                    <Panel Name="PART_ScrollBarsSeparator"
+                           Grid.Row="1" Grid.Column="1"
+                           Background="{DynamicResource ScrollViewerScrollBarsSeparatorBackground}"
+                           Opacity="0">
+                        <Panel.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                            </Transitions>
+                        </Panel.Transitions>
+                    </Panel>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^[IsExpanded=true] /template/ Panel#PART_ScrollBarsSeparator">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+
+        <Style Selector="^[AllowAutoHide=True] /template/ DockPanel#ContentPanel">
+            <Setter Property="Grid.ColumnSpan" Value="2" />
+            <Setter Property="Grid.RowSpan" Value="2" />
+        </Style>
+    </ControlTheme>
+
+    <!-- ===== TableView ===== -->
+    <ControlTheme x:Key="{x:Type TableView}" TargetType="TableView">
+        <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+        <!-- The ListBox sits on an OPAQUE surface, so the translucent accent selection composites the
+             same muted accent here; the near-transparent ControlFillColorDefault would read brighter. -->
+        <Setter Property="Background" Value="{DynamicResource SolidBackgroundFillColorQuarternaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="{DynamicResource OverlayCornerRadius}" />
+        <!-- Clip to the rounded corners so the header strip and the full-width row fills follow them. -->
+        <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+        <Setter Property="ScrollViewer.IsScrollChainingEnabled" Value="True" />
+        <Setter Property="ScrollViewer.IsScrollInertiaEnabled" Value="True" />
+        <Setter Property="TextBlock.TextTrimming" Value="{x:Static TextTrimming.CharacterEllipsis}" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border ClipToBounds="{TemplateBinding ClipToBounds}"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}">
+                    <ScrollViewer Name="PART_ScrollViewer"
+                                  Theme="{StaticResource FluidTableViewScrollViewer}"
+                                  VerticalSnapPointsType="{TemplateBinding (ScrollViewer.VerticalSnapPointsType)}"
+                                  HorizontalSnapPointsType="{TemplateBinding (ScrollViewer.HorizontalSnapPointsType)}"
+                                  HorizontalScrollBarVisibility="{TemplateBinding (ScrollViewer.HorizontalScrollBarVisibility)}"
+                                  VerticalScrollBarVisibility="{TemplateBinding (ScrollViewer.VerticalScrollBarVisibility)}"
+                                  IsScrollChainingEnabled="{TemplateBinding (ScrollViewer.IsScrollChainingEnabled)}"
+                                  IsScrollInertiaEnabled="{TemplateBinding (ScrollViewer.IsScrollInertiaEnabled)}"
+                                  IsDeferredScrollingEnabled="{TemplateBinding (ScrollViewer.IsDeferredScrollingEnabled)}"
+                                  AllowAutoHide="{TemplateBinding (ScrollViewer.AllowAutoHide)}"
+                                  BringIntoViewOnFocusChange="{TemplateBinding (ScrollViewer.BringIntoViewOnFocusChange)}">
+                        <ItemsPresenter Name="PART_ItemsPresenter"
+                                        ItemsPanel="{TemplateBinding ItemsPanel}"
+                                        Margin="{TemplateBinding Padding}" />
+                    </ScrollViewer>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+
+    <!-- ===== TableViewRow: the stock Fluent template, recoloured via the keys above ===== -->
+    <ControlTheme x:Key="{x:Type TableViewRow}" TargetType="TableViewRow">
+        <Setter Property="Background" Value="{DynamicResource TableViewRowBackground}" />
+        <Setter Property="Padding" Value="{DynamicResource TableViewRowPadding}" />
+        <Setter Property="MinHeight" Value="{DynamicResource TableViewRowMinHeight}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Name="Border"
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}"
+                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}">
+                    <TableViewCellsPresenter Name="PART_CellsPresenter" />
+                </Border>
+            </ControlTemplate>
+        </Setter>
+
+        <Style Selector="^:disabled /template/ Border#Border">
+            <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundDisabled}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundDisabled}" />
+        </Style>
+        <Style Selector="^:pointerover /template/ Border#Border">
+            <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundPointerOver}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundPointerOver}" />
+        </Style>
+        <Style Selector="^:pressed /template/ Border#Border">
+            <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundPressed}" />
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundPressed}" />
+        </Style>
+        <Style Selector="^:selected">
+            <Style Selector="^ /template/ Border#Border">
+                <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundSelected}" />
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundSelected}" />
+            </Style>
+            <Style Selector="^:pointerover /template/ Border#Border">
+                <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundSelectedPointerOver}" />
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundSelectedPointerOver}" />
+            </Style>
+            <Style Selector="^:pressed /template/ Border#Border">
+                <Setter Property="Background" Value="{DynamicResource TableViewRowBackgroundSelectedPressed}" />
+                <Setter Property="TextElement.Foreground" Value="{DynamicResource TableViewRowForegroundSelectedPressed}" />
+            </Style>
+        </Style>
+    </ControlTheme>
+
+    <!-- ===== TableViewCell: ContentControl's built-in presenter template; centre the text vertically
+         in the 40 px row and give it the ListBox's 16 px inset. ===== -->
+    <ControlTheme x:Key="{x:Type TableViewCell}" TargetType="TableViewCell">
+        <Setter Property="Padding" Value="{DynamicResource TableViewCellPadding}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+    </ControlTheme>
+
+    <!-- ===== TableViewColumnHeader ===== -->
+    <!-- The resize handle: a 1 px divider on the column boundary, hidden until the header is hovered. -->
+    <ControlTemplate x:Key="FluidTableViewColumnResizer" TargetType="Thumb">
+        <Border Background="Transparent">
+            <Rectangle Width="1"
+                       Fill="{DynamicResource TableViewColumnHeaderSeparatorBackground}"
+                       HorizontalAlignment="Center" />
+        </Border>
+    </ControlTemplate>
+
+    <ControlTheme x:Key="{x:Type TableViewColumnHeader}" TargetType="TableViewColumnHeader">
+        <Setter Property="Foreground" Value="{DynamicResource TableViewColumnHeaderForeground}" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontSize" Value="{DynamicResource TableViewColumnHeaderFontSize}" />
+        <Setter Property="MinHeight" Value="{DynamicResource TableViewColumnHeaderMinHeight}" />
+        <Setter Property="Padding" Value="{DynamicResource TableViewCellPadding}" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="ClipToBounds" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <ContentPresenter Name="PART_ContentPresenter"
+                                      Background="{TemplateBinding Background}"
+                                      BorderBrush="{TemplateBinding BorderBrush}"
+                                      BorderThickness="{TemplateBinding BorderThickness}"
+                                      CornerRadius="{TemplateBinding CornerRadius}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Content="{TemplateBinding Content}"
+                                      Padding="{TemplateBinding Padding}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" />
+                    <!-- Disabled (and so never shown) when the column can't be resized. -->
+                    <Thumb Name="PART_Resizer"
+                           Template="{StaticResource FluidTableViewColumnResizer}"
+                           Width="{DynamicResource TableViewColumnResizerWidth}"
+                           HorizontalAlignment="Right"
+                           Cursor="SizeWestEast"
+                           Margin="{DynamicResource TableViewColumnResizerMargin}"
+                           Opacity="0"
+                           IsEnabled="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Column.CanUserEffectivelyResize, FallbackValue=False}">
+                        <Thumb.Transitions>
+                            <Transitions>
+                                <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
+                            </Transitions>
+                        </Thumb.Transitions>
+                    </Thumb>
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+
+        <!-- Reveal the divider / handle while the header is hovered or the handle is being dragged. -->
+        <Style Selector="^:pointerover /template/ Thumb#PART_Resizer:not(:disabled)">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+        <Style Selector="^ /template/ Thumb#PART_Resizer:pressed">
+            <Setter Property="Opacity" Value="1" />
+        </Style>
+    </ControlTheme>
+
+</ResourceDictionary>
