@@ -47,7 +47,9 @@
     <SolidColorBrush x:Key="TableViewRowForegroundSelectedPointerOver" Color="{DynamicResource TextFillColorPrimary}" />
     <SolidColorBrush x:Key="TableViewRowForegroundSelectedPressed" Color="{DynamicResource TextFillColorPrimary}" />
     <SolidColorBrush x:Key="TableViewRowForegroundDisabled" Color="{DynamicResource TextFillColorDisabled}" />
-    <!-- Header captions + the hover-revealed column divider / resize handle. -->
+    <!-- Header captions. Our header draws no separator, but the stock FluentTheme header theme reads
+         TableViewColumnHeaderSeparatorBackground — keep it mapped onto our tokens so a consumer who
+         puts the stock theme back (via TableViewColumn.HeaderTheme) still gets a theme-aware line. -->
     <SolidColorBrush x:Key="TableViewColumnHeaderForeground" Color="{DynamicResource TextFillColorSecondary}" />
     <SolidColorBrush x:Key="TableViewColumnHeaderSeparatorBackground" Color="{DynamicResource ControlStrongStrokeColorDefault}" />
 
@@ -56,15 +58,19 @@
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid ColumnDefinitions="*,Auto" RowDefinitions="*,Auto">
-                    <DockPanel Name="ContentPanel">
-                        <!-- Header strip: the same fill the Expander header / GroupBox header use. -->
-                        <Border Name="HeaderStrip"
-                                DockPanel.Dock="Top"
-                                Background="{DynamicResource ExpanderHeaderBackground}"
-                                Padding="{DynamicResource TableViewRowPadding}">
-                            <TableViewColumnHeadersPresenter />
-                        </Border>
+                <!-- The header strip gets its own row so the overlay scrollbars (which cover the
+                     scrolling content) never paint over it — the vertical bar sitting on top of the
+                     last column's header read as a bright smudge. The headers presenter tracks the
+                     TableView's own horizontal offset, so it still scrolls with the rows. -->
+                <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,*,Auto">
+                    <!-- Header strip: the same fill the Expander header / GroupBox header use. -->
+                    <Border Name="HeaderStrip"
+                            Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                            Background="{DynamicResource ExpanderHeaderBackground}"
+                            Padding="{DynamicResource TableViewRowPadding}">
+                        <TableViewColumnHeadersPresenter />
+                    </Border>
+                    <DockPanel Name="ContentPanel" Grid.Row="1" Grid.Column="0">
                         <ScrollContentPresenter Name="PART_ContentPresenter"
                                                 Background="{TemplateBinding Background}"
                                                 HorizontalSnapPointsType="{TemplateBinding HorizontalSnapPointsType}"
@@ -81,17 +87,18 @@
                         </ScrollContentPresenter>
                     </DockPanel>
                     <!-- Our thin overlay scrollbars, inset so they clear the rounded corners (rows and
-                         the selection stay full-width) — the same insets as the demo's DataGrid. -->
+                         the selection stay full-width) — the same insets as the demo's DataGrid. They
+                         live in the content row only, so they never cross the header strip. -->
                     <ScrollBar Name="PART_HorizontalScrollBar"
                                Orientation="Horizontal"
-                               Grid.Column="0" Grid.Row="1"
+                               Grid.Column="0" Grid.Row="2"
                                Margin="4,0,3,3" />
                     <ScrollBar Name="PART_VerticalScrollBar"
                                Orientation="Vertical"
-                               Grid.Column="1" Grid.Row="0"
+                               Grid.Column="1" Grid.Row="1"
                                Margin="0,4,3,4" />
                     <Panel Name="PART_ScrollBarsSeparator"
-                           Grid.Row="1" Grid.Column="1"
+                           Grid.Row="2" Grid.Column="1"
                            Background="{DynamicResource ScrollViewerScrollBarsSeparatorBackground}"
                            Opacity="0">
                         <Panel.Transitions>
@@ -108,6 +115,8 @@
             <Setter Property="Opacity" Value="1" />
         </Style>
 
+        <!-- Auto-hiding (overlay) scrollbars: let the rows run under them, but only across the
+             content rows — the header keeps its own row above. -->
         <Style Selector="^[AllowAutoHide=True] /template/ DockPanel#ContentPanel">
             <Setter Property="Grid.ColumnSpan" Value="2" />
             <Setter Property="Grid.RowSpan" Value="2" />
@@ -215,13 +224,13 @@
     </ControlTheme>
 
     <!-- ===== TableViewColumnHeader ===== -->
-    <!-- The resize handle: a 1 px divider on the column boundary, hidden until the header is hovered. -->
+    <!-- The resize handle is an invisible grab strip straddling the column boundary: the header stays
+         quiet (the same separator-less treatment the DataGrid refinements give, since the ListBox has
+         no header chrome), and the SizeWestEast cursor is the affordance. An earlier version faded a
+         1 px divider in on hover; it flickered column to column and, on the last column, collided with
+         the overlay scrollbar into a bright smudge. -->
     <ControlTemplate x:Key="FluidTableViewColumnResizer" TargetType="Thumb">
-        <Border Background="Transparent">
-            <Rectangle Width="1"
-                       Fill="{DynamicResource TableViewColumnHeaderSeparatorBackground}"
-                       HorizontalAlignment="Center" />
-        </Border>
+        <Border Background="Transparent" />
     </ControlTemplate>
 
     <ControlTheme x:Key="{x:Type TableViewColumnHeader}" TargetType="TableViewColumnHeader">
@@ -246,32 +255,18 @@
                                       Padding="{TemplateBinding Padding}"
                                       VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
                                       HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}" />
-                    <!-- Disabled (and so never shown) when the column can't be resized. -->
+                    <!-- Disabled (so it neither grabs the pointer nor shows the resize cursor) when
+                         the column can't be resized. -->
                     <Thumb Name="PART_Resizer"
                            Template="{StaticResource FluidTableViewColumnResizer}"
                            Width="{DynamicResource TableViewColumnResizerWidth}"
                            HorizontalAlignment="Right"
                            Cursor="SizeWestEast"
                            Margin="{DynamicResource TableViewColumnResizerMargin}"
-                           Opacity="0"
-                           IsEnabled="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Column.CanUserEffectivelyResize, FallbackValue=False}">
-                        <Thumb.Transitions>
-                            <Transitions>
-                                <DoubleTransition Property="Opacity" Duration="0:0:0.1" />
-                            </Transitions>
-                        </Thumb.Transitions>
-                    </Thumb>
+                           IsEnabled="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Column.CanUserEffectivelyResize, FallbackValue=False}" />
                 </Panel>
             </ControlTemplate>
         </Setter>
-
-        <!-- Reveal the divider / handle while the header is hovered or the handle is being dragged. -->
-        <Style Selector="^:pointerover /template/ Thumb#PART_Resizer:not(:disabled)">
-            <Setter Property="Opacity" Value="1" />
-        </Style>
-        <Style Selector="^ /template/ Thumb#PART_Resizer:pressed">
-            <Setter Property="Opacity" Value="1" />
-        </Style>
     </ControlTheme>
 
 </ResourceDictionary>
