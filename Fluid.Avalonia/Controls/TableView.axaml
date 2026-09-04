@@ -15,6 +15,21 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
+    <!-- ===== Header hover fill ===== -->
+    <!-- Matched to the DataGrid column header so the two tables behave identically side by side on the
+         demo's Collections page: the bundled DataGrid theme fills PART_ColumnHeaderRoot with a neutral
+         overlay at 0x19 on hover (black in light, white in dark), measured from a live render. It is a
+         plain neutral scrim rather than one of our tint tokens, so it is spelled out per theme here.
+         TableView headers are not clickable (no sorting), so there is no pressed state to mirror. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <SolidColorBrush x:Key="TableViewColumnHeaderBackgroundPointerOver" Color="#19000000" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="TableViewColumnHeaderBackgroundPointerOver" Color="#19FFFFFF" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
     <!-- ===== Metrics ===== -->
     <!-- FluentTheme pads every row (and the header strip) 6,9,6,12. We keep rows flush so the hover /
          selection fill runs edge to edge like the ListBox, and size them with MinHeight instead. -->
@@ -267,6 +282,11 @@
                 </Panel>
             </ControlTemplate>
         </Setter>
+
+        <!-- Hover fills the whole header cell, exactly like the DataGrid's column header. -->
+        <Style Selector="^:pointerover">
+            <Setter Property="Background" Value="{DynamicResource TableViewColumnHeaderBackgroundPointerOver}" />
+        </Style>
     </ControlTheme>
 
 </ResourceDictionary>
