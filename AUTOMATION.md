@@ -6,7 +6,17 @@ Everything reaches `main` through a pull request — a branch ruleset blocks dir
 
 ## Opening a PR
 
-Branch (or fork), make your change, and open a PR against `main`. Commit and PR titles follow [**Conventional Commits**](https://www.conventionalcommits.org/), because [release-please](https://github.com/googleapis/release-please) reads them to drive the version and changelog: `feat:` / `fix:` / `perf:` / `deps:` / `revert:` appear in the changelog (and `feat` / `fix` bump the version), while `docs:` / `chore:` / `refactor:` / `test:` / `build:` / `ci:` are silent. Merges are **squash**, so the **PR title becomes the commit message** — make it a valid Conventional Commit.
+Branch (or fork), make your change, and open a PR against `main`.
+
+Commit and PR titles follow [**Conventional Commits**](https://www.conventionalcommits.org/), because [release-please](https://github.com/googleapis/release-please) reads them to drive the version and changelog:
+
+| Prefix | Effect |
+| --- | --- |
+| `feat:` `fix:` | Appears in the changelog, **and bumps the version**. |
+| `perf:` `deps:` `revert:` | Appears in the changelog. |
+| `docs:` `chore:` `refactor:` `test:` `build:` `ci:` | Silent. |
+
+Merges are **squash**, so the PR title becomes the commit message. Make it a valid Conventional Commit.
 
 ## What a PR must pass
 
@@ -33,5 +43,15 @@ The owner can always force-merge through the ruleset's admin bypass.
 
 ## After it lands on `main`
 
-- **release-please** keeps a `chore(main): release X.Y.Z` PR up to date from the Conventional Commits since the last tag; merging it bumps `.release-please-manifest.json` + `CHANGELOG.md`, tags `vX.Y.Z`, cuts a GitHub Release, and **publishes the package to NuGet**. The publish is gated on release-please reporting a new release on the run that lands the release PR — if that's missed (e.g. the release PR is admin-merged and the tag already exists by the time a later run evaluates), the version tags but the package never pushes. Recover with the Release workflow's **`workflow_dispatch`**, which packs + pushes an existing tag by hand: `gh workflow run release.yml -f tag=vX.Y.Z`.
 - **[`pages.yml`](.github/workflows/pages.yml)** redeploys the WebAssembly demo to GitHub Pages.
+- **release-please** keeps a `chore(main): release X.Y.Z` PR up to date from the Conventional Commits since the last tag. Merging that PR bumps `.release-please-manifest.json` and `CHANGELOG.md`, tags `vX.Y.Z`, cuts a GitHub Release, and **publishes the package to NuGet**.
+
+### When a release tags but doesn't publish
+
+The publish step is gated on release-please reporting a new release *on the same run that lands the release PR*. One case slips through that gate: the release PR is admin-merged, so by the time a later run evaluates, the tag already exists and no new release is reported. The version tags, but the package never pushes.
+
+Recover by packing and pushing the existing tag by hand, via the Release workflow's `workflow_dispatch`:
+
+```bash
+gh workflow run release.yml -f tag=vX.Y.Z
+```
