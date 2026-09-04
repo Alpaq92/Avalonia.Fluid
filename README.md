@@ -87,6 +87,7 @@ dotnet publish Fluid.Avalonia.Demo.Browser -c Release
 
 - **A WinUI 3 look for Avalonia.** Fluent 2 color tokens, a WinUI type ramp (rendered in the bundled, cross-platform **DejaVu Sans** font), 4 px / 8 px corner radii, the "lit-edge" control border, drop-shadow elevation, and a translucent window backdrop (Mica on Windows, vibrancy on macOS, a KWin blur on KDE — solid elsewhere on Linux — toggleable, and following the OS transparency setting on Windows). Symbol glyphs come from the bundled **Codicons** icon font, so both text and icons render identically on desktop and in the browser.
 - **Live accent integration, on every OS.** The accent is read from the host where possible — the full seven-shade **Windows** `AccentPalette`, the **macOS** `AppleAccentColor`, and the **Linux** GNOME (`accent-color`) / KDE (`kdeglobals`) / Cinnamon (Mint theme name) accent — and flows into every accented control, updating instantly when the user changes it. Where no OS accent is available, apps can pick from the **Open Color preset palette** (20 swatches) or set any color manually (e.g. with a `ColorPicker`) via `AccentService.SetAccent` / `UseSystemAccent`.
+- **Themed for the whole Avalonia control set**, including the newest ones: Avalonia 12.1's core **`TableView`** — a read-only table of XAML-defined, resizable columns — is themed in the library to read exactly like our `ListBox` and `DataGrid`, down to a shared header-hover fill. See it beside the DataGrid on the demo's **Collections** page.
 - **Cross-platform & self-contained.** One library (`Fluid.Avalonia`) targeting `net8.0` with no third-party theme dependencies — it layers on Avalonia's built-in `FluentTheme`. Platform specifics (registry / `defaults` / `gsettings` accent readers, Mica, dark title bar) are guarded and degrade gracefully everywhere.
 
 ## Why?
@@ -112,6 +113,12 @@ Requires the **.NET 10 SDK** (pinned via `global.json`; the library and desktop 
 ```
 dotnet build
 dotnet run --project Fluid.Avalonia.Demo.Desktop
+```
+
+Avalonia 12.1's **hot reload** (live `.axaml` / `.cs` edits in the running app) is wired into the Desktop head but **off by default**, because it is a commercial package that fails the build without a licence key. Opt in per run — see [OVERVIEW.md](OVERVIEW.md#hot-reload-opt-in):
+
+```
+dotnet watch run -p:FluidAvaloniaHotReload=true -p:AvaloniaUILicenseKey=<key>
 ```
 
 The accent is read natively on Windows, macOS and Linux (GNOME / KDE / Cinnamon), falling back to Avalonia's platform accent elsewhere — and can always be overridden with a preset or a picked color.

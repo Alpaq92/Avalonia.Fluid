@@ -6,11 +6,21 @@
 ### Features
 
 * theme Avalonia 12.1's TableView, bump to Avalonia 12.1.2 ([#55](https://github.com/Alpaq92/Fluid.Avalonia/issues/55)) ([285d018](https://github.com/Alpaq92/Fluid.Avalonia/commit/285d0186e520bbb903a0295e53f7aeb1ff93afec))
+  * **`TableView` control theme** (`Controls/TableView.axaml`) — Avalonia 12.1 added a core, read-only `TableView`: a `ListBox` with XAML-defined, resizable columns, sitting between a `ListBox` and the `DataGrid`. It lives in `Avalonia.Controls`, so the **library** themes it: the same bordered, rounded, opaque surface as our ListBox / DataGrid, a quiet header strip with secondary-colour semibold captions, 40 px rows on the ListBox's 16 px inset, and the `ListBoxItem`'s translucent base-accent selection. Row brushes go through FluentTheme's own `TableViewRow*` keys; `TableView`, its header-hosting `ScrollViewer` and `TableViewColumnHeader` are re-authored.
+  * The header hover fill is **matched to the bundled DataGrid's** column header (a neutral scrim at `0x19`, black in light and white in dark), so the two tables behave identically side by side; the overlay scrollbars were also moved off the header strip, where they had been painting across the last column.
+  * **Opt-in hot reload** on the Desktop head — Avalonia 12.1's GA [hot reload](https://avaloniaui.net/blog/hot-reload-ga) is wired behind `-p:FluidAvaloniaHotReload=true` (Debug only). It is a commercial package needing a licence key, so a plain build and CI never reference it. It does not replace the demo's **Playground**, which is a runtime XAML sandbox for the app's own users and also ships in the WebAssembly demo. See [OVERVIEW.md](OVERVIEW.md#hot-reload-opt-in).
+  * Demo: a `TableView` example on the **Collections** page beside the DataGrid, with XAML-defined, compiled-binding columns.
 
 
 ### Bug Fixes
 
 * **deps:** Bump the nuget-minor-and-patch group with 3 updates ([#53](https://github.com/Alpaq92/Fluid.Avalonia/issues/53)) ([2962c0e](https://github.com/Alpaq92/Fluid.Avalonia/commit/2962c0e1eabd383e614b5965417c65362e5b5809))
+
+
+### Dependencies
+
+* Avalonia **12.1.1 → 12.1.2** (library, demo and both heads).
+* Demo only: **Fluid.Avalonia.Acrylic 1.3.1 → 1.4.0**, the companion backdrop package rebuilt on the same Avalonia version.
 
 ## [2.0.3](https://github.com/Alpaq92/Fluid.Avalonia/compare/v2.0.2...v2.0.3) (2026-07-08)
 
