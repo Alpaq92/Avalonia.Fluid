@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.1.0](https://github.com/Alpaq92/Fluid.Avalonia/compare/v2.0.3...v2.1.0) (2026-09-04)
+
+
+### Features
+
+* theme Avalonia 12.1's TableView, bump to Avalonia 12.1.2 ([#55](https://github.com/Alpaq92/Fluid.Avalonia/issues/55)) ([285d018](https://github.com/Alpaq92/Fluid.Avalonia/commit/285d0186e520bbb903a0295e53f7aeb1ff93afec))
+
+
+### Bug Fixes
+
+* **deps:** Bump the nuget-minor-and-patch group with 3 updates ([#53](https://github.com/Alpaq92/Fluid.Avalonia/issues/53)) ([2962c0e](https://github.com/Alpaq92/Fluid.Avalonia/commit/2962c0e1eabd383e614b5965417c65362e5b5809))
+
 ## [2.0.3](https://github.com/Alpaq92/Fluid.Avalonia/compare/v2.0.2...v2.0.3) (2026-07-08)
 
 
